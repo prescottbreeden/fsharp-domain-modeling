@@ -8,6 +8,7 @@ open System.Text.RegularExpressions
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
 open fsharp_api
+open FSharp.Data.Sql
 
 module Payments =
     type CheckNumber = CheckNumber of int
@@ -73,7 +74,6 @@ module Entities =
         {
             Birthday: DateTime option
             Address: Address
-            DatabaseInfo: DatabaseInfo
             Email: EmailContactInfo list
             Id: int
             Name: PersonalName
@@ -96,96 +96,56 @@ module Entities =
             then Some (PhoneNumber s)
             else None
 
+    let getEmail (email: EmailContactInfo) : string =
+        match email with
+        | Verified s -> string s
+        | Unverified None -> ""
+        | Unverified (Some (EmailAddress s)) -> s
+
+module db =
+    [<Literal>]
+    let connString = "Server=localhost;Database=test_users;User=dingo;Password=dingo;AutoEnlist=false;ConvertZeroDatetime=true;"
+
+    [<Literal>]
+    let dbVendor = Common.DatabaseProviderTypes.MYSQL
+
+    [<Literal>]
+    let indivAmount = 1000
+
+    [<Literal>]
+    let useOptTypes = true
+
+    [<Literal>]
+    let resPath = __SOURCE_DIRECTORY__ + @"/../../../packages/scripts/MySql.Data/lib/net45"
+
+    // type sql = SqlDataProvider<
+    //                 dbVendor,
+    //                 connString,
+    //                 ResolutionPath = resPath,
+    //                 IndividualsAmount = indivAmount,
+    //                 UseOptionTypes = useOptTypes
+    //             >
+    // let ctx = sql.GetDataContext()
 
 [<ApiController>]
 [<Route("[controller]")>]
 type UserController (logger : ILogger<UserController>) =
     inherit ControllerBase()
 
-    let (users: Entities.UniversalContact list) = 
-        [
-            { 
-                Birthday = None
-                Address =
-                    {
-                        Street1 = "Dingo Drive"
-                        Street2 = None
-                        City = "Seattle"
-                        State = "WA"
-                        ZipCode = "91809"
-                    }
-                DatabaseInfo =
-                    {
-                        CreatedAt = DateTime.Now
-                        UpdatedAt = DateTime.Now
-                        ModifiedBy = 1
-                    }
-                Email = [ Entities.createEmailInfo("bob@gmail.com") ]
-                Id = 1
-                Name =
-                    {
-                        FirstName = "Bob"
-                        LastName = "Ross"
-                        MiddleName = None
-                    }
-                PhoneNumber = []
-                TeacherCredentials = None
-            };
-            { 
-                Birthday = None
-                Address =
-                    {
-                        Street1 = "Flamingo Way"
-                        Street2 = None
-                        City = "Seattle"
-                        State = "WA"
-                        ZipCode = "91809"
-                    }
-                DatabaseInfo =
-                    {
-                        CreatedAt = DateTime.Now
-                        UpdatedAt = DateTime.Now
-                        ModifiedBy = 1
-                    }
-                Email = 
-                    [
-                        Entities.createEmailInfo("dingo@gmail.com");
-                        Entities.createEmailInfo("delightful.dingo@gmail.com");
-                    ]
-                Id = 2
-                Name =
-                    {
-                        FirstName = "Delightful"
-                        LastName = "Dingo"
-                        MiddleName = None
-                    }
-                PhoneNumber = []
-                TeacherCredentials = None
-            };
-        ]
+    // [<HttpGet>]
+    // member __.Get() : ActionResult<Entities.UniversalContact list> =
+    //     ctx.user
+    //     |> Seq.toList
+    //     |> ActionResult<Entities.UniversalContact list>
 
-    let getEmail (email: Entities.EmailContactInfo) : string =
-        match email with
-        | Entities.Verified s -> string s
-        | Entities.Unverified s -> 
-            match s with
-            | Some s -> sprintf "%A" s
-            | None -> ""
-
-
-    [<HttpGet>]
-    member __.Get() : ActionResult<Entities.UniversalContact list> =
-        users 
-        |> ActionResult<Entities.UniversalContact list>
-
-    [<HttpGet("{id}")>] 
-    member __.Get(id : int): ActionResult<Entities.UniversalContact list> = 
-        users
-        |> List.filter (fun (user: Entities.UniversalContact) -> user.Id = id)
-        |> ActionResult<Entities.UniversalContact list>
+    // [<HttpGet("{id}")>] 
+    // member __.Get(id : int): ActionResult<Entities.UniversalContact list> = 
+    //     users
+    //     |> List.filter (fun (user: Entities.UniversalContact) -> user.Id = id)
+    //     |> ActionResult<Entities.UniversalContact list>
 
     [<HttpGet("emailtest")>] 
     member __.GetEmails(id : int): ActionResult<string> = 
-        let email = getEmail(Entities.createEmailInfo("dingo@gmail.com"))
+        let email = Entities.getEmail(Entities.createEmailInfo("dingo@gmail.com"))
         ActionResult<string> email
 

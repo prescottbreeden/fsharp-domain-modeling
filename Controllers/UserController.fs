@@ -1,13 +1,9 @@
 ﻿namespace fsharp_api.Controllers
 
 open System
-open System.Collections.Generic
-open System.Linq
-open System.Threading.Tasks
 open System.Text.RegularExpressions
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
-open fsharp_api
 open FSharp.Data.Sql
 
 module Payments =
@@ -104,28 +100,26 @@ module Entities =
 
 module db =
     [<Literal>]
-    let connString = "Server=localhost;Database=test_users;User=dingo;Password=dingo;AutoEnlist=false;ConvertZeroDatetime=true;"
+    let ConnString = "Server=localhost;Database=test_users;User=dingo;Password=dingo"
 
     [<Literal>]
-    let dbVendor = Common.DatabaseProviderTypes.MYSQL
+    let DbVendor = Common.DatabaseProviderTypes.MYSQL
 
     [<Literal>]
-    let indivAmount = 1000
+    let IndivAmount = 1000
 
     [<Literal>]
-    let useOptTypes = true
+    let UseOptTypes = true
 
     [<Literal>]
-    let resPath = __SOURCE_DIRECTORY__ + @"/../../../packages/scripts/MySql.Data/lib/net45"
+    let ResPath = __SOURCE_DIRECTORY__ + @"./../bin/Debug/netcoreapp3.1"
 
-    // type sql = SqlDataProvider<
-    //                 dbVendor,
-    //                 connString,
-    //                 ResolutionPath = resPath,
-    //                 IndividualsAmount = indivAmount,
-    //                 UseOptionTypes = useOptTypes
-    //             >
-    // let ctx = sql.GetDataContext()
+    type Sql = SqlDataProvider<
+                    ResolutionPath = ResPath,
+                    IndividualsAmount = IndivAmount,
+                    UseOptionTypes = UseOptTypes
+                >
+    let ctx = Sql.GetDataContext()
 
 [<ApiController>]
 [<Route("[controller]")>]
@@ -140,7 +134,7 @@ type UserController (logger : ILogger<UserController>) =
 
     // [<HttpGet("{id}")>] 
     // member __.Get(id : int): ActionResult<Entities.UniversalContact list> = 
-    //     users
+    //     ctx.user
     //     |> List.filter (fun (user: Entities.UniversalContact) -> user.Id = id)
     //     |> ActionResult<Entities.UniversalContact list>
 
